@@ -135,7 +135,13 @@ class CPDataset(data.Dataset):
             (self.fine_width, self.fine_height), Image.BILINEAR)
         parse_shape_ori = parse_shape_ori.resize(
             (self.fine_width, self.fine_height), Image.BILINEAR)
-        shape_ori = self.transform(parse_shape_ori)  # [-1,1]
+        import torchvision.transforms.functional as TF
+        
+        # Ensure the image has 3 channels before transformation
+        if parse_shape_ori.mode != "RGB":
+            parse_shape_ori = parse_shape_ori.convert("RGB")
+        
+        shape_ori = self.transform(parse_shape_ori)
         shape = self.transform(parse_shape)  # [-1,1]
         phead = torch.from_numpy(parse_head)  # [0,1]
         # phand = torch.from_numpy(parse_hand)  # [0,1]
