@@ -46,87 +46,87 @@ class CPDataset(data.Dataset):
     def name(self):
         return "CPDataset"
 
-   def __getitem__(self, index):
-    c_name = self.c_names[index]
-    im_name = self.im_names[index]
-    
-    if self.stage == 'GMM':
-        c = Image.open(osp.join(self.data_path, 'cloth', c_name)).convert("RGB")
-        cm = Image.open(osp.join(self.data_path, 'cloth-mask', c_name)).convert('L')
-    else:
-        c = Image.open(osp.join(self.data_path, 'warp-cloth', im_name)).convert("RGB")
-        cm = Image.open(osp.join(self.data_path, 'warp-mask', im_name)).convert('L')
-    
-    c = self.transform(c)
-    cm_array = np.array(cm)
-    cm_array = (cm_array >= 128).astype(np.float32)
-    cm = torch.from_numpy(cm_array).unsqueeze(0)
-    
-    im = Image.open(osp.join(self.data_path, 'image', im_name)).convert("RGB")
-    im = self.transform(im)
-    
-    parse_name = im_name.replace('.jpg', '.png')
-    im_parse = Image.open(osp.join(self.data_path, 'image-parse-new', parse_name)).convert('L')
-    parse_array = np.array(im_parse)
-    
-    im_mask = Image.open(osp.join(self.data_path, 'image-mask', parse_name)).convert('L')
-    mask_array = np.array(im_mask)
-    parse_shape = (mask_array > 0).astype(np.float32)
-    
-    parse_cloth = (parse_array == 5).astype(np.float32) + \
-                  (parse_array == 6).astype(np.float32) + \
-                  (parse_array == 7).astype(np.float32)
-    
-    parse_shape_ori = Image.fromarray((parse_shape * 255).astype(np.uint8))
-    parse_shape_ori = parse_shape_ori.convert("RGB")  # Ensure it is in RGB
-    
-    parse_shape = parse_shape_ori.resize((self.fine_width // 16, self.fine_height // 16), Image.BILINEAR)
-    parse_shape = parse_shape.resize((self.fine_width, self.fine_height), Image.BILINEAR)
-    parse_shape_ori = parse_shape_ori.resize((self.fine_width, self.fine_height), Image.BILINEAR)
-    
-    shape_ori = self.transform(parse_shape_ori)
-    shape = self.transform(parse_shape)
-    pcm = torch.from_numpy(parse_cloth).unsqueeze(0)
-    
-    pose_name = im_name.replace('.jpg', '_keypoints.json')
-    with open(osp.join(self.data_path, 'pose', pose_name), 'r') as f:
-        pose_label = json.load(f)
-        pose_data = np.array(pose_label['people'][0]['pose_keypoints']).reshape((-1, 3))
-    
-    pose_map = torch.zeros(pose_data.shape[0], self.fine_height, self.fine_width)
-    r = self.radius
-    im_pose = Image.new('L', (self.fine_width, self.fine_height))
-    pose_draw = ImageDraw.Draw(im_pose)
-    
-    for i in range(pose_data.shape[0]):
-        one_map = Image.new('L', (self.fine_width, self.fine_height))
-        draw = ImageDraw.Draw(one_map)
-        pointx, pointy = pose_data[i, 0], pose_data[i, 1]
-        if pointx > 1 and pointy > 1:
-            draw.rectangle((pointx - r, pointy - r, pointx + r, pointy + r), 'white', 'white')
-            pose_draw.rectangle((pointx - r, pointy - r, pointx + r, pointy + r), 'white', 'white')
-        pose_map[i] = self.transform(one_map)[0]
-    
-    im_pose = self.transform(im_pose)
-    agnostic = torch.cat([shape, im_pose, pose_map], 0)
-    
-    im_g = self.transform(Image.open('grid.png')) if self.stage == 'GMM' else ''
-    
-    result = {
-        'c_name': c_name,
-        'im_name': im_name,
-        'cloth': c,
-        'cloth_mask': cm,
-        'image': im,
-        'agnostic': agnostic,
-        'shape': shape,
-        'pose_image': im_pose,
-        'grid_image': im_g,
-        'shape_ori': shape_ori,
-        'parse_cloth_mask': pcm,
-    }
-    
-    return result
+       def __getitem__(self, index):
+        c_name = self.c_names[index]
+        im_name = self.im_names[index]
+        
+        if self.stage == 'GMM':
+            c = Image.open(osp.join(self.data_path, 'cloth', c_name)).convert("RGB")
+            cm = Image.open(osp.join(self.data_path, 'cloth-mask', c_name)).convert('L')
+        else:
+            c = Image.open(osp.join(self.data_path, 'warp-cloth', im_name)).convert("RGB")
+            cm = Image.open(osp.join(self.data_path, 'warp-mask', im_name)).convert('L')
+        
+        c = self.transform(c)
+        cm_array = np.array(cm)
+        cm_array = (cm_array >= 128).astype(np.float32)
+        cm = torch.from_numpy(cm_array).unsqueeze(0)
+        
+        im = Image.open(osp.join(self.data_path, 'image', im_name)).convert("RGB")
+        im = self.transform(im)
+        
+        parse_name = im_name.replace('.jpg', '.png')
+        im_parse = Image.open(osp.join(self.data_path, 'image-parse-new', parse_name)).convert('L')
+        parse_array = np.array(im_parse)
+        
+        im_mask = Image.open(osp.join(self.data_path, 'image-mask', parse_name)).convert('L')
+        mask_array = np.array(im_mask)
+        parse_shape = (mask_array > 0).astype(np.float32)
+        
+        parse_cloth = (parse_array == 5).astype(np.float32) + \
+                      (parse_array == 6).astype(np.float32) + \
+                      (parse_array == 7).astype(np.float32)
+        
+        parse_shape_ori = Image.fromarray((parse_shape * 255).astype(np.uint8))
+        parse_shape_ori = parse_shape_ori.convert("RGB")  # Ensure it is in RGB
+        
+        parse_shape = parse_shape_ori.resize((self.fine_width // 16, self.fine_height // 16), Image.BILINEAR)
+        parse_shape = parse_shape.resize((self.fine_width, self.fine_height), Image.BILINEAR)
+        parse_shape_ori = parse_shape_ori.resize((self.fine_width, self.fine_height), Image.BILINEAR)
+        
+        shape_ori = self.transform(parse_shape_ori)
+        shape = self.transform(parse_shape)
+        pcm = torch.from_numpy(parse_cloth).unsqueeze(0)
+        
+        pose_name = im_name.replace('.jpg', '_keypoints.json')
+        with open(osp.join(self.data_path, 'pose', pose_name), 'r') as f:
+            pose_label = json.load(f)
+            pose_data = np.array(pose_label['people'][0]['pose_keypoints']).reshape((-1, 3))
+        
+        pose_map = torch.zeros(pose_data.shape[0], self.fine_height, self.fine_width)
+        r = self.radius
+        im_pose = Image.new('L', (self.fine_width, self.fine_height))
+        pose_draw = ImageDraw.Draw(im_pose)
+        
+        for i in range(pose_data.shape[0]):
+            one_map = Image.new('L', (self.fine_width, self.fine_height))
+            draw = ImageDraw.Draw(one_map)
+            pointx, pointy = pose_data[i, 0], pose_data[i, 1]
+            if pointx > 1 and pointy > 1:
+                draw.rectangle((pointx - r, pointy - r, pointx + r, pointy + r), 'white', 'white')
+                pose_draw.rectangle((pointx - r, pointy - r, pointx + r, pointy + r), 'white', 'white')
+            pose_map[i] = self.transform(one_map)[0]
+        
+        im_pose = self.transform(im_pose)
+        agnostic = torch.cat([shape, im_pose, pose_map], 0)
+        
+        im_g = self.transform(Image.open('grid.png')) if self.stage == 'GMM' else ''
+        
+        result = {
+            'c_name': c_name,
+            'im_name': im_name,
+            'cloth': c,
+            'cloth_mask': cm,
+            'image': im,
+            'agnostic': agnostic,
+            'shape': shape,
+            'pose_image': im_pose,
+            'grid_image': im_g,
+            'shape_ori': shape_ori,
+            'parse_cloth_mask': pcm,
+        }
+        
+        return result
     def __len__(self):
         return len(self.im_names)
 
