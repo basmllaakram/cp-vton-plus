@@ -63,7 +63,7 @@ class CPDataset(data.Dataset):
         cm.unsqueeze_(0)
     
         # person image
-        im = Image.open(osp.join(self.data_path, 'image', im_name))
+        im = Image.open(osp.join(self.data_path, 'image', im_name)).convert('RGB')  # Convert to RGB
         im = self.transform(im)  # [-1,1]
     
         # LIP labels
