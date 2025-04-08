@@ -126,7 +126,8 @@ class FeatureRegression(nn.Module):
         self.linear = nn.Linear(64 * 4 * 3, output_dim)
         self.tanh = nn.Tanh()
         if use_cuda:
-            self.conv.cuda()
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.conv.to(device)
             self.linear.cuda()
             self.tanh.cuda()
 
