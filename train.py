@@ -12,6 +12,7 @@ from networks import GicLoss, GMM, UnetGenerator, VGGLoss, load_checkpoint, save
 from tensorboardX import SummaryWriter
 from visualization import board_add_image, board_add_images
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_opt():
     parser = argparse.ArgumentParser()
