@@ -6,6 +6,7 @@ from torchvision import models
 import os
 
 import numpy as np
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def weights_init_normal(m):
