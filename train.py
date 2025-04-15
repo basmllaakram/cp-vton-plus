@@ -18,7 +18,7 @@ def get_opt():
     parser.add_argument("--name", default="GMM")
     # parser.add_argument("--name", default="TOM")
 
-    parser.add_argument("--gpu_ids", default="")
+    parser.add_argument("--gpu_ids", default="0", help="IDs of GPUs to use, e.g., '0' or '0,1'")
     parser.add_argument('-j', '--workers', type=int, default=1)
     parser.add_argument('-b', '--batch-size', type=int, default=4)
 
